@@ -1,6 +1,7 @@
 import com.mysql.cj.protocol.Resultset;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 
 public class Database {
@@ -230,7 +231,51 @@ public class Database {
         }
         return result;
     }
-    public Book selectBookByID(String BookID) {
+
+    public User getUser(String email,String password) throws SQLException {
+        Connection connect = getConnection();
+        String sql = "SELECT UserID, Name, Email, Password, ContactNumber, RegistrationDate FROM library_db.customers_info WHERE Email = ? AND Password = ?";
+        try (PreparedStatement preparedState = connect.prepareStatement(sql)) {
+            preparedState.setString(1,email);
+            preparedState.setString(2,password);
+            ResultSet rs = preparedState.executeQuery();
+            while(rs.next()) {
+                String name = rs.getString("Name");
+                email = rs.getString("Email");
+                password = rs.getString("Password");
+                String contactNumber = rs.getString("ContactNumber");
+                User user = new User(name,password,email,new ArrayList<Book>(),contactNumber);
+                return user;
+            }
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public void addUser(String name, String email, String password, String contactNumber, LocalDate registrationDate) {
+        String sql = "INSERT INTO library_db.customers_info (Name, Email, Password, ContactNumber, RegistrationDate) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, name);
+            pstmt.setString(2, email);
+            pstmt.setString(3, password); // Ensure this password is hashed
+            pstmt.setString(4, contactNumber);
+            pstmt.setDate(5, java.sql.Date.valueOf(registrationDate));
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("User added successfully!");
+            } else {
+                System.out.println("No user was added.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public Book selectBookByID(String BookID,User user) {
         return null;
     }
 

@@ -1,5 +1,7 @@
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -10,6 +12,15 @@ public class UserService {
     public void seeAvailableBooks() {
         db.printBooksTables();
     }
+
+    public void userMenu(User user) {
+        System.out.println("Welcome " + user.getName() + "! Please choose from these search options " +
+                "\n 1. Search by Author " +
+                "\n 2. Search by Genre " +
+                "\n 3. Search by Title ");
+    }
+
+
     public void getBooksByAuthor() throws SQLException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter the author you would like to search by: ");
@@ -18,6 +29,7 @@ public class UserService {
         db.getBooksByAuthor(author);
         return;
     }
+
     public void getBooksByTitle() throws SQLException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter the title you would like to search by: ");
@@ -32,12 +44,40 @@ public class UserService {
         System.out.println("Please enter the genre you would like to search by: ");
         String genre = scanner.nextLine();
         Map<Integer,Book> map = db.getBooksByGenre(genre);
-        System.out.println(map);
         return;
     }
 
     public Loan checkOutBook() {
         return null;
+    }
+
+    public boolean logIn() throws SQLException {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Please enter your email: " );
+        String username = scanner.nextLine();
+        System.out.println("Please enter your password: ");
+        String password = scanner.nextLine();
+        User user = db.getUser(username,password);
+        if(user == null) {
+            System.out.println("There is no user with those credentials. Please press 1 to try again or press 2 to sign up");
+        }else {
+            userMenu(user);
+        }
+        return false;
+    }
+    public void addUser() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Please enter your name: ");
+        String name = scanner.nextLine().toLowerCase(Locale.ROOT);
+        System.out.println("Please enter your email: ");
+        String email = scanner.nextLine().toLowerCase(Locale.ROOT);
+        System.out.println("Please enter your password: " );
+        String password = scanner.nextLine();
+        System.out.println("Please enter your contact number with format xxx-xxx-xxxx");
+        String contactNumber = scanner.nextLine();
+        LocalDate registrationDate = LocalDate.now();
+        db.addUser(name,email,password,contactNumber,registrationDate);
+
     }
     
 

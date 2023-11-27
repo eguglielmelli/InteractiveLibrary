@@ -9,7 +9,7 @@ public class Main {
 
         UserService us = new UserService();
         Display ds = new Display();
-        us.getBooksByGenre();
+        us.logIn();
        // db.printBooksTables();
 
 
