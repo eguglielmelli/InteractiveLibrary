@@ -234,6 +234,8 @@ public class Database {
 
     public User getUser(String email,String password) throws SQLException {
         Connection connect = getConnection();
+        email = email.trim();
+        password = password.trim();
         String sql = "SELECT UserID, Name, Email, Password, ContactNumber, RegistrationDate FROM library_db.customers_info WHERE Email = ? AND Password = ?";
         try (PreparedStatement preparedState = connect.prepareStatement(sql)) {
             preparedState.setString(1,email);
@@ -277,6 +279,33 @@ public class Database {
     }
     public Book selectBookByID(String BookID,User user) {
         return null;
+    }
+
+    public void printCustomerTable() {
+        String tableName = "customers_info"; // Your table name
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Statement stmt = conn.createStatement()) {
+
+            String sql = "SELECT * FROM " + tableName;
+            ResultSet rs = stmt.executeQuery(sql);
+
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                System.out.print(metaData.getColumnName(i) + "\t");
+            }
+            System.out.println();
+
+            while (rs.next()) {
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(rs.getString(i) + "\t");
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
