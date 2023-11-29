@@ -1,13 +1,12 @@
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class UserService {
 
     private Database db = new Database();
+    private String email = null;
+    private String password = null;
 
     public void seeAvailableBooks() {
         db.printBooksTables();
@@ -38,9 +37,10 @@ public class UserService {
             case "3":
                 getBooksByTitle();
                 break;
+            case "4":
+                Display ds = new Display();
+                ds.displayMenu();
         }
-
-
     }
 
     public void getBooksByAuthor() throws SQLException {
@@ -48,7 +48,24 @@ public class UserService {
         System.out.println("Please enter the author you would like to search by: ");
         System.out.print("> ");
         String author = scanner.nextLine();
-        db.getBooksByAuthor(author);
+        Map<String,Book> bookMap = db.getBooksByAuthor(author);
+        System.out.println("Select an ID of the book you would like to check out, or press q to return to the options menu");
+        System.out.print("> ");
+        String bookChoice = scanner.nextLine();
+        if(bookChoice.equals("q")) {
+            userMenu(db.getUser(email,password));
+            return;
+        }
+        while(!bookMap.containsKey(bookChoice)) {
+            System.out.println("That is not a valid ID. Please choose from the list.");
+            System.out.print("> ");
+            bookChoice = scanner.nextLine();
+            if(bookChoice.equals("q")) {
+                userMenu(db.getUser(email,password));
+            }
+        }
+        checkOutBook(bookMap,bookChoice);
+
         return;
     }
 
@@ -57,7 +74,8 @@ public class UserService {
         System.out.println("Please enter the title you would like to search by: ");
         System.out.print("> ");
         String title = scanner.nextLine();
-        db.getBooksByTitle(title);
+        Map<String,Book> bookMap = db.getBooksByTitle(title);
+
         return;
 
     }
@@ -67,25 +85,51 @@ public class UserService {
         System.out.println("Please enter the genre you would like to search by: ");
         System.out.print("> ");
         String genre = scanner.nextLine();
-        Map<Integer,Book> map = db.getBooksByGenre(genre);
+        Map<String,Book> map = db.getBooksByGenre(genre);
         return;
     }
 
-    public Loan checkOutBook() {
-        return null;
+    public void checkOutBook(Map<String,Book> map,String bookID) throws SQLException {
+        User user = db.getUser(email,password);
+        db.addLoan(Integer.parseInt(bookID),user.getUserID(),LocalDate.now(),LocalDate.now().plusDays(30),null);
+        user.onLoanBooks.add(map.get(bookID));
+        db.decrementAvailableCopies(Integer.parseInt(bookID));
+        return;
+
     }
 
     public boolean logIn() throws SQLException {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter your email: " );
         System.out.print("> ");
-        String username = scanner.nextLine();
+        email = scanner.nextLine();
         System.out.println("Please enter your password: ");
         System.out.print("> ");
-        String password = scanner.nextLine();
-        User user = db.getUser(username,password);
+        password = scanner.nextLine();
+        User user = db.getUser(email,password);
         if(user == null) {
-            System.out.println("There is no user with those credentials. Please press 1 to try again or press 2 to sign up");
+            System.out.println("There is no user with those credentials. Choose from these options: " +
+                    "\n 1. Try again" +
+                    "\n 2. Sign up" +
+                    "\n 3. Press 'q' to quit");
+            System.out.print("> ");
+            String choice = scanner.nextLine().toLowerCase(Locale.ROOT);
+            while(!choice.equals("1") && !choice.equals("2") && !choice.equals("q")) {
+                System.out.println("Invalid option. Please choose again.");
+                System.out.print("> ");
+                choice = scanner.nextLine();
+            }
+
+            if(choice.equals("1")) {
+                logIn();
+            }
+            else if(choice.equals("2")) {
+                addUser();
+            }
+            else if(choice.equals("q")) {
+                Display display = new Display();
+                display.displayMenu();
+            }
         }else {
             userMenu(user);
         }

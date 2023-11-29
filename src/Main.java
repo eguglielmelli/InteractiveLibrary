@@ -10,7 +10,8 @@ public class Main {
         UserService us = new UserService();
         Display ds = new Display();
         db.printCustomerTable();
-        us.logIn();
+        ds.displayMenu();
+       // db.printLoansTable();
 
 
     }
