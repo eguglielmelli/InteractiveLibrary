@@ -46,4 +46,10 @@ public class Book {
     public int getAvailableCopies() {
         return availableCopies;
     }
+
+    @Override
+    public String toString() {
+        return getTitle() + " " + getAuthor() + " " + getISBN() + " " + getGenre();
+    }
+
 }

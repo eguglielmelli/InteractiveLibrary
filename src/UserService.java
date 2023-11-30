@@ -17,12 +17,13 @@ public class UserService {
                 "\n 1. Search by Author " +
                 "\n 2. Search by Genre " +
                 "\n 3. Search by Title " +
-                "\n 4. Log out");
+                "\n 4. See Checked Out Books" +
+                "\n 5. Log out");
 
         Scanner scanner = new Scanner(System.in);
         System.out.print("> ");
         String choice = scanner.nextLine();
-        while(!choice.equals("1") && !choice.equals("2") && !choice.equals("3") && !choice.equals("4")) {
+        while(!choice.equals("1") && !choice.equals("2") && !choice.equals("3") && !choice.equals("4") && !choice.equals("5")) {
             System.out.println("That is a not a valid choice. Please choose again.");
             System.out.print("> ");
             choice = scanner.nextLine();
@@ -38,6 +39,9 @@ public class UserService {
                 getBooksByTitle();
                 break;
             case "4":
+                seeBooksOnLoan();
+                break;
+            case "5":
                 Display ds = new Display();
                 ds.displayMenu();
         }
@@ -45,6 +49,7 @@ public class UserService {
 
     public void getBooksByAuthor() throws SQLException {
         Scanner scanner = new Scanner(System.in);
+        User user = db.getUser(email,password);
         System.out.println("Please enter the author you would like to search by: ");
         System.out.print("> ");
         String author = scanner.nextLine();
@@ -65,16 +70,36 @@ public class UserService {
             }
         }
         checkOutBook(bookMap,bookChoice);
+        user.getOnLoanBooks().add(bookMap.get(bookChoice));
 
         return;
     }
 
     public void getBooksByTitle() throws SQLException {
         Scanner scanner = new Scanner(System.in);
+        User user = db.getUser(email,password);
         System.out.println("Please enter the title you would like to search by: ");
         System.out.print("> ");
         String title = scanner.nextLine();
+
         Map<String,Book> bookMap = db.getBooksByTitle(title);
+        System.out.println("Select an ID of the book you would like to check out, or press q to return to the options menu");
+        System.out.print("> ");
+        String bookChoice = scanner.nextLine();
+        if(bookChoice.equals("q")) {
+            userMenu(db.getUser(email,password));
+            return;
+        }
+        while(!bookMap.containsKey(bookChoice)) {
+            System.out.println("That is not a valid ID. Please choose from the list.");
+            System.out.print("> ");
+            bookChoice = scanner.nextLine();
+            if(bookChoice.equals("q")) {
+                userMenu(db.getUser(email,password));
+            }
+        }
+        checkOutBook(bookMap,bookChoice);
+        System.out.println(user.userID);
 
         return;
 
@@ -107,6 +132,8 @@ public class UserService {
         System.out.print("> ");
         password = scanner.nextLine();
         User user = db.getUser(email,password);
+        this.email = user.email;
+        this.password = user.password;
         if(user == null) {
             System.out.println("There is no user with those credentials. Choose from these options: " +
                     "\n 1. Try again" +
@@ -153,6 +180,18 @@ public class UserService {
         db.addUser(name,email,password,contactNumber,registrationDate);
 
     }
+    public void seeBooksOnLoan() throws SQLException {
+        User user = db.getUser(email,password);
+        if(!user.getOnLoanBooks().isEmpty()) {
+            System.out.println("Here are your books currently checked out: ");
+            for(Book book : user.getOnLoanBooks()) {
+                System.out.println(book.toString());
+            }
+        }else {
+            System.out.println("No books currently checked out.");
+        }
+    }
+
     
 
 

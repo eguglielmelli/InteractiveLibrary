@@ -414,10 +414,23 @@ public class Database {
             // Handle database connection error
         }
     }
+    public void clearLoanTable() {
+        String sql = "DELETE FROM " + "library_db" + ".loans_info";
 
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("Loan table cleared successfully. Rows affected: " + affectedRows);
+            } else {
+                System.out.println("Loan table is already empty or operation did not execute.");
+            }
 
-
-
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Handle database connection error
+        }
+    }
 
 }
