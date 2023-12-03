@@ -160,6 +160,7 @@ public class UserService {
         }else {
             userMenu(user);
         }
+        scanner.close();
         return false;
     }
     public void addUser() {
@@ -191,11 +192,4 @@ public class UserService {
             System.out.println("No books currently checked out.");
         }
     }
-
-    
-
-
-
-
-
 }

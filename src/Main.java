@@ -1,5 +1,7 @@
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public class Main {
 
@@ -10,10 +12,11 @@ public class Main {
         UserService us = new UserService();
         Display ds = new Display();
         //db.clearLoanTable();
-        //db.decrementAvailableCopies(1);
-       // db.decrementAvailableCopies(2);
-        us.logIn();
-        db.printLoansTable();
+
+        DatabaseService dbs = new DatabaseService();
+
+        db.searchBooks("george ");
+
         //ds.displayMenu();
         //us.logIn();
 
