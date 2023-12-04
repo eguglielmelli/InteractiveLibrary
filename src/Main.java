@@ -9,13 +9,15 @@ public class Main {
 
         Database db = new Database();
 
-        UserService us = new UserService();
+       // UserService us = new UserService();
         Display ds = new Display();
-        //db.clearLoanTable();
+        ds.displayMenu();
+       // db.printCustomerTable();
+        //db.printLoansTable();
 
         DatabaseService dbs = new DatabaseService();
 
-        db.searchBooks("george ");
+
 
         //ds.displayMenu();
         //us.logIn();

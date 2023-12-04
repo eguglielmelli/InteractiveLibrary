@@ -1,6 +1,6 @@
-import com.mysql.cj.protocol.Resultset;
 
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -73,50 +73,6 @@ public class Database {
         return DriverManager.getConnection(url,user,password);
     }
 
-    public Map<String,Book> getBooksByAuthor(String author) throws SQLException {
-        Connection connect = getConnection();
-        String query = "SELECT * FROM library_db.books_info WHERE LOWER(author) LIKE ?";
-        Map<String,Book> result = new HashMap<>();
-        author = "%" + author.strip().toLowerCase(Locale.ROOT) + "%";
-
-        try (PreparedStatement preparedState = connect.prepareStatement(query)) {
-            preparedState.setString(1, author);
-            ResultSet rs = preparedState.executeQuery();
-
-            boolean found = false;
-            while (rs.next()) {
-                found = true;
-                int bookID = rs.getInt("BookID");
-                String Title = rs.getString("Title");
-                String Author = rs.getString("Author");
-                String ISBN = rs.getString("ISBN");
-                String Genre = rs.getString("Genre");
-                int AvailableCopies = rs.getInt("AvailableCopies");
-                int TotalCopies = rs.getInt("TotalCopies");
-                int year = rs.getInt("PublicationYear");
-
-                System.out.println("BookID: " + bookID);
-                System.out.println("Title: " + Title);
-                System.out.println("Author: " + Author);
-                System.out.println("ISBN: " + ISBN);
-                System.out.println("Genre: " + Genre);
-                System.out.println("Available Copies: " + AvailableCopies);
-                System.out.println("-----------------------------");
-
-                // Here we should use the actual author's name from the database, not the search term.
-                Book book = new Book(bookID, Title, Author, ISBN, year, Genre, TotalCopies, AvailableCopies);
-                result.put(String.valueOf(bookID), book);
-            }
-
-            if (!found) {
-                System.out.println("No books found by author: " + author);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
     public void addBook(String title,String author,String ISBN,int year,String genre) {
         title = title.toLowerCase(Locale.ROOT);
         author = author.toLowerCase(Locale.ROOT);
@@ -176,89 +132,6 @@ public class Database {
         }
 
     }
-    public Map<String,Book> getBooksByTitle(String title) throws SQLException {
-        Connection connect = getConnection();
-        title = title.strip().toLowerCase(Locale.ROOT);
-        String sql = "SELECT * FROM library_db.books_info WHERE Title = ?";
-        Map<String,Book> result = new HashMap<>();
-
-        try (PreparedStatement preparedState = connect.prepareStatement(sql)) {
-            preparedState.setString(1, title);
-            ResultSet rs = preparedState.executeQuery();
-
-            boolean found = false;
-            while (rs.next()) {
-                found = true;
-                int bookID = Integer.parseInt(rs.getString("BookID"));
-                String Title = rs.getString("Title");
-                String author = rs.getString("Author");
-                String ISBN = rs.getString("ISBN");
-                String Genre = rs.getString("Genre");
-                int AvailableCopies = rs.getInt("AvailableCopies");
-                int TotalCopies = rs.getInt("TotalCopies");
-                int year = rs.getInt("PublicationYear");
-
-                System.out.println("BookID: " + bookID);
-                System.out.println("Title: " + Title);
-                System.out.println("Author: " + author);
-                System.out.println("ISBN: " + ISBN);
-                System.out.println("Genre: " + Genre);
-                System.out.println("Available Copies: " + AvailableCopies);
-                System.out.println("-----------------------------");
-                Book book = new Book(bookID,title,author,ISBN,year,Genre,TotalCopies,AvailableCopies);
-                result.put(String.valueOf(bookID),book);
-            }
-            if (!found) {
-                System.out.println("No books found with title: " + title);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-    public Map<String,Book> getBooksByGenre(String genre) throws SQLException {
-        Connection connect = getConnection();
-        Map<String,Book> result = new HashMap<>();
-        genre = genre.strip().toLowerCase(Locale.ROOT);
-        String sql = "SELECT BookID, Title, Author, ISBN,PublicationYear, Genre,TotalCopies,AvailableCopies FROM library_db.books_info WHERE Genre = ?";
-
-        try (PreparedStatement preparedState = connect.prepareStatement(sql)) {
-            preparedState.setString(1, genre);
-            ResultSet rs = preparedState.executeQuery();
-
-            boolean found = false;
-            while (rs.next()) {
-                found = true;
-                int bookID = Integer.parseInt(rs.getString("BookID"));
-                String title = rs.getString("Title");
-                String author = rs.getString("Author");
-                String ISBN = rs.getString("ISBN");
-                String Genre = rs.getString("Genre");
-                int AvailableCopies = rs.getInt("AvailableCopies");
-                int TotalCopies = rs.getInt("TotalCopies");
-                int year = rs.getInt("PublicationYear");
-
-                System.out.println("BookID: " + bookID);
-                System.out.println("Title: " + title);
-                System.out.println("Author: " + author);
-                System.out.println("ISBN: " + ISBN);
-                System.out.println("Genre: " + Genre);
-                System.out.println("Available Copies: " + AvailableCopies);
-                System.out.println("-----------------------------");
-                Book book = new Book(bookID,title,author,ISBN,year,Genre,TotalCopies,AvailableCopies);
-                result.put(String.valueOf(bookID),book);
-
-            }
-            if (!found) {
-                System.out.println("No books found with genre: " + genre);
-                return null;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
     public User getUser(String email,String password) throws SQLException {
         Connection connect = getConnection();
         email = email.trim();
@@ -274,7 +147,7 @@ public class Database {
                 email = rs.getString("Email");
                 password = rs.getString("Password");
                 String contactNumber = rs.getString("ContactNumber");
-                User user = new User(userID,name,password,email,new ArrayList<Book>(),contactNumber);
+                User user = new User(userID,name,password,email,contactNumber);
                 return user;
             }
         }catch (SQLException e) {
@@ -397,11 +270,6 @@ public class Database {
             pstmt.setInt(1, bookID);
 
             int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                System.out.println("Decreased available copies for book ID: " + bookID);
-            } else {
-                System.out.println("No update made. Book may not exist or no available copies.");
-            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -426,11 +294,10 @@ public class Database {
     }
     public Map<String,Book> searchBooks(String searchTerm) throws SQLException {
         Connection connect = getConnection();
-        // Create a SQL query to search in author, title, and genre fields
+
         String query = "SELECT * FROM library_db.books_info WHERE " +
                 "LOWER(Author) LIKE ? OR LOWER(Title) LIKE ? OR LOWER(Genre) LIKE ? AND AvailableCopies > 0";
         Map<String,Book> result = new HashMap<>();
-        // Prepare the search term to be used with LIKE
         searchTerm = "%" + searchTerm.strip().toLowerCase(Locale.ROOT) + "%";
 
         try (PreparedStatement preparedState = connect.prepareStatement(query)) {
@@ -465,5 +332,40 @@ public class Database {
             e.printStackTrace();
         }
         return result;
+    }
+    public void showCurrentlyCheckedOutBooks(int userID) throws SQLException {
+        Connection connection = getConnection();
+        String query = "SELECT books_info.*, loans_info.CheckoutDate, loans_info.DueDate " +
+                "FROM books_info " +
+                "JOIN loans_info ON books_info.BookID = loans_info.BookID " +
+                "WHERE loans_info.UserID = ? AND loans_info.ReturnDate IS NULL";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userID);
+            ResultSet resultSet = statement.executeQuery();
+
+            System.out.printf("%-30s %-30s %-20s %-20s %-15s %-15s %n",
+                    "Title", "Author", "ISBN", "Genre", "Checkout Date", "Due Date");
+            System.out.println(String.join("", Collections.nCopies(130, "-")));
+
+            while (resultSet.next()) {
+                // Extract book information
+                String title = resultSet.getString("Title");
+                String author = resultSet.getString("Author");
+                String isbn = resultSet.getString("ISBN");
+                String genre = resultSet.getString("Genre");
+
+                // Extract loan information
+                Date checkoutDate = resultSet.getDate("CheckoutDate");
+                Date dueDate = resultSet.getDate("DueDate");
+
+                // Print each record
+                System.out.printf("%-30s %-30s %-20s %-20s %-15s %-15s %n",
+                        title, author, isbn, genre,
+                        checkoutDate.toString(), dueDate.toString());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,20 +1,16 @@
-import java.util.List;
 
 public class User {
-    int userID;
-    String name;
-    String password;
-    String email;
-    String contactNumber;
-    List<Book> onLoanBooks;
-    Database db = new Database();
+    private int userID;
+    private String name;
+    private String password;
+    private String email;
+    private String contactNumber;
 
-    public User(int userID,String name,String password,String email,List<Book> onLoanBooks,String contactNumber) {
+    public User(int userID,String name,String password,String email,String contactNumber) {
         this.userID = userID;
         this.name = name;
         this.password = password;
         this.email = email;
-        this.onLoanBooks = onLoanBooks;
         this.contactNumber = contactNumber;
     }
     public int getUserID() {
@@ -35,10 +31,6 @@ public class User {
 
     public String getContactNumber() {
         return contactNumber;
-    }
-
-    public List<Book> getOnLoanBooks() {
-        return onLoanBooks;
     }
 
 }

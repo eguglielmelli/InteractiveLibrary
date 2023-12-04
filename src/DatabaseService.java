@@ -1,6 +1,7 @@
-import javax.xml.crypto.Data;
+
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Map;
 
 public class DatabaseService {
     private Database db;
@@ -33,22 +34,27 @@ public class DatabaseService {
             System.out.println("Checkout was unsuccessful. Try again at a later time.");
             return false;
         }
+        db.decrementAvailableCopies(bookID);
         System.out.println("Checkout was successful! Your book can now be seen in your checked out books.");
         return true;
     }
-    public void getBookByTitle(String title) {
+
+    public Map<String,Book> searchBooks(String searchTerm) {
+        Map<String,Book> map;
         try {
-            db.getBooksByTitle(title);
+            map = db.searchBooks(searchTerm);
         }catch(SQLException e) {
-            System.out.println("Error getting title. Try again.");
-            return;
+            System.out.println("Error connecting to database.");
+            return null;
         }
+        return map;
     }
 
-    public void getBookByAuthor(String author) {
+    public void seeBooksOnLoan(int userID) {
         try {
-            db.getBooksByAuthor(author);
+            db.showCurrentlyCheckedOutBooks(userID);
         }catch(SQLException e) {
+            System.out.println("Error finding checked out books. Try again.");
             return;
         }
     }
