@@ -17,6 +17,8 @@ public class Main {
 
         DatabaseService dbs = new DatabaseService();
 
+        System.out.println("This is an update");
+
         // dbs.seeBooksOnLoan(3);
 
 
