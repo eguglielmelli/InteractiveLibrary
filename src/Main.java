@@ -13,9 +13,11 @@ public class Main {
         Display ds = new Display();
         ds.displayMenu();
        // db.printCustomerTable();
-        //db.printLoansTable();
+        db.printLoansTable();
 
         DatabaseService dbs = new DatabaseService();
+
+        // dbs.seeBooksOnLoan(3);
 
 
 

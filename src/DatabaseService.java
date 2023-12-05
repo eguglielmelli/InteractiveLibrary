@@ -58,4 +58,17 @@ public class DatabaseService {
             return;
         }
     }
+    public void incrementAvailableCopies(int bookID) {
+        db.incrementAvailableCopies(bookID);
+    }
+    public void returnBook(int bookID,LocalDate returnDate,int userID) {
+        try {
+            db.returnBook(bookID,returnDate,userID);
+
+        }catch(SQLException e) {
+            System.out.println("Error connecting to database. Try again");
+            return;
+        }
+        System.out.println("Return was successful!");
+    }
 }

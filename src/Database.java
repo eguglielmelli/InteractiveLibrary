@@ -344,12 +344,19 @@ public class Database {
             statement.setInt(1, userID);
             ResultSet resultSet = statement.executeQuery();
 
-            System.out.printf("%-30s %-30s %-20s %-20s %-15s %-15s %n",
+            if(!resultSet.isBeforeFirst()) {
+                System.out.println("You currently have no books checked out.");
+                return;
+            }
+
+            System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", "BookID",
                     "Title", "Author", "ISBN", "Genre", "Checkout Date", "Due Date");
             System.out.println(String.join("", Collections.nCopies(130, "-")));
 
+
             while (resultSet.next()) {
                 // Extract book information
+                int bookID = resultSet.getInt("BookID");
                 String title = resultSet.getString("Title");
                 String author = resultSet.getString("Author");
                 String isbn = resultSet.getString("ISBN");
@@ -360,10 +367,34 @@ public class Database {
                 Date dueDate = resultSet.getDate("DueDate");
 
                 // Print each record
-                System.out.printf("%-30s %-30s %-20s %-20s %-15s %-15s %n",
+                System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", bookID,
                         title, author, isbn, genre,
                         checkoutDate.toString(), dueDate.toString());
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void incrementAvailableCopies(int bookID) {
+        String sql = "UPDATE library_db.books_info SET AvailableCopies = AvailableCopies + 1 WHERE BookID = ? AND AvailableCopies > 0";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, bookID);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void returnBook(int bookID,LocalDate returnDate,int userID) throws SQLException {
+        Connection connection = getConnection();
+        String query = "UPDATE library_db.loans_info SET ReturnDate = ? WHERE bookID = ? AND userID = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setDate(1, Date.valueOf(returnDate));
+            statement.setInt(2,bookID);
+            statement.setInt(3,userID);
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }

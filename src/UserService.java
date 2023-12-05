@@ -22,18 +22,26 @@ public class UserService {
             System.out.println("Welcome " + user.getName() + "! Please choose from these search options: " +
                     "\n 1. Search Books" +
                     "\n 2. See Checked Out Books" +
-                    "\n 3. Log out");
+                    "\n 3. Return Book" +
+                    "\n 4. Log Out");
 
             System.out.print("> ");
             String choice = scanner.nextLine();
             if (choice.equals("1")) {
                 searchBooks();
+                System.out.println();
             } else if (choice.equals("2")) {
+                System.out.println();
                 seeBooksOnLoan();
+                System.out.println();
             } else if (choice.equals("3")) {
+                System.out.println();
+                returnBook();
+                System.out.println();
+            } else if(choice.equals("4")) {
                 System.out.println("Thank you for using the library. Goodbye!");
                 break;
-            } else {
+            }else {
                 System.out.println("That is not a valid choice. Please choose again.");
             }
         }
@@ -59,12 +67,12 @@ public class UserService {
                     userMenu(user);
                 }
             }
-            checkOutBook(bookMap,bookChoice);
+            checkOutBook(bookChoice);
         }
         return;
     }
 
-    public void checkOutBook(Map<String,Book> map,String bookID) {
+    public void checkOutBook(String bookID) {
             dbs.addLoanToDB(Integer.parseInt(bookID),user.getUserID(),LocalDate.now(),LocalDate.now().plusDays(30),null);
             return;
     }
@@ -88,5 +96,20 @@ public class UserService {
     }
     public void seeBooksOnLoan() {
         dbs.seeBooksOnLoan(user.getUserID());
+    }
+
+    public void returnBook() {
+        System.out.println("If you know the book ID that you would like to return, feel free to enter it. If you would like to see your currently checked out books," +
+                "press 'y'.");
+        System.out.print("> " );
+        String choice = scanner.nextLine();
+        if(choice.equals("y")) {
+            seeBooksOnLoan();
+        }
+        System.out.println("Input book ID:");
+        System.out.print("> " );
+        int bookID = Integer.parseInt(scanner.nextLine());
+        dbs.returnBook(bookID,LocalDate.now(),user.getUserID());
+        dbs.incrementAvailableCopies(bookID);
     }
 }
