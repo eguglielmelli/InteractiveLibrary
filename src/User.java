@@ -1,4 +1,7 @@
-
+/**
+ * Class Represents a user of the Interactive Library
+ * Where they can search / check out/ return books
+ */
 public class User {
     private int userID;
     private String name;
