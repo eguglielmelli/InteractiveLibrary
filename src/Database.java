@@ -179,8 +179,53 @@ public class Database {
         }
         return false;
     }
+    public boolean deleteUser(int userID) throws SQLException {
+        // Assume showCurrentlyCheckedOutBooks returns a Set of book IDs
+        int booksCheckedOut = findNumberOfBooksCheckedOut(userID);
+        if (booksCheckedOut != 0) {
+            System.out.println("You cannot delete your account while you have books checked out.");
+            return false;
+        }
 
-    public void printCustomerTable() {
+        Connection conn = getConnection();
+        try {
+            // Start transaction
+            conn.setAutoCommit(false);
+
+            // Delete related records from loans_info
+            String deleteLoansQuery = "DELETE FROM library_db.loans_info WHERE userID = ?";
+            try (PreparedStatement pstmtLoans = conn.prepareStatement(deleteLoansQuery)) {
+                pstmtLoans.setInt(1, userID);
+                pstmtLoans.executeUpdate();
+            }
+
+            // Delete user from customers_info
+            String deleteUserQuery = "DELETE FROM library_db.customers_info WHERE userID = ?";
+            try (PreparedStatement pstmtUser = conn.prepareStatement(deleteUserQuery)) {
+                pstmtUser.setInt(1, userID);
+                int rowsAffected = pstmtUser.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("User successfully deleted.");
+                    return true;
+                } else {
+                    System.out.println("User with that ID could not be found.");
+                }
+            }
+
+            // Commit transaction
+            conn.commit();
+        } catch (SQLException e) {
+            // Rollback transaction in case of error
+            conn.rollback();
+            System.out.println("Error occurred during deletion. Try again.");
+            e.printStackTrace();
+        } finally {
+            // Reset default behavior
+            conn.setAutoCommit(true);
+        }
+        return false;
+    }
+        public void printCustomerTable() {
         String tableName = "customers_info"; // Your table name
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
@@ -333,8 +378,25 @@ public class Database {
         }
         return result;
     }
-    public void showCurrentlyCheckedOutBooks(int userID) throws SQLException {
+    public int findNumberOfBooksCheckedOut(int userID) throws SQLException {
         Connection connection = getConnection();
+        String query = "SELECT COUNT(*) FROM library_db.loans_info WHERE UserID = ? AND ReturnDate IS NULL"; // Assuming ReturnDate is NULL for checked out books
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userID);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Check if the result set has a row and return the count
+            if (resultSet.next()) {
+                return resultSet.getInt(1); // The count is in the first column
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Return 0 if no rows are found or an exception occurs
+    }
+    public Set<Integer> showCurrentlyCheckedOutBooks(int userID) throws SQLException {
+        Connection connection = getConnection();
+        Set<Integer> bookIDs = new HashSet<>();
         String query = "SELECT books_info.*, loans_info.CheckoutDate, loans_info.DueDate " +
                 "FROM books_info " +
                 "JOIN loans_info ON books_info.BookID = loans_info.BookID " +
@@ -345,8 +407,7 @@ public class Database {
             ResultSet resultSet = statement.executeQuery();
 
             if(!resultSet.isBeforeFirst()) {
-                System.out.println("You currently have no books checked out.");
-                return;
+                return null;
             }
 
             System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", "BookID",
@@ -357,6 +418,7 @@ public class Database {
             while (resultSet.next()) {
                 // Extract book information
                 int bookID = resultSet.getInt("BookID");
+                bookIDs.add(bookID);
                 String title = resultSet.getString("Title");
                 String author = resultSet.getString("Author");
                 String isbn = resultSet.getString("ISBN");
@@ -374,15 +436,15 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return bookIDs;
     }
     public void incrementAvailableCopies(int bookID) {
         String sql = "UPDATE library_db.books_info SET AvailableCopies = AvailableCopies + 1 WHERE BookID = ? AND AvailableCopies > 0";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
             pstmt.setInt(1, bookID);
-
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }

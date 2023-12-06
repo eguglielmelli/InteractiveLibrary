@@ -2,6 +2,7 @@
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 public class DatabaseService {
     private Database db;
@@ -50,12 +51,17 @@ public class DatabaseService {
         return map;
     }
 
-    public void seeBooksOnLoan(int userID) {
+    public Set<Integer> seeBooksOnLoan(int userID) {
         try {
-            db.showCurrentlyCheckedOutBooks(userID);
+            Set<Integer> bookIDs = db.showCurrentlyCheckedOutBooks(userID);
+            if(bookIDs == null) {
+                System.out.println("You have no books checked out.");
+                return null;
+            }
+            return bookIDs;
         }catch(SQLException e) {
             System.out.println("Error finding checked out books. Try again.");
-            return;
+            return null;
         }
     }
     public void incrementAvailableCopies(int bookID) {
@@ -70,5 +76,16 @@ public class DatabaseService {
             return;
         }
         System.out.println("Return was successful!");
+    }
+
+    public boolean deleteAccount(int userID) {
+        try {
+           if(db.deleteUser(userID)) {
+                return true;
+           }
+        }catch(SQLException e) {
+            return false;
+        }
+        return false;
     }
 }

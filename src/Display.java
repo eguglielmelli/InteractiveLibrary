@@ -1,4 +1,4 @@
-import java.sql.SQLException;
+
 import java.util.Scanner;
 
 public class Display {
@@ -9,36 +9,42 @@ public class Display {
     public Display() {
         this.userService = null;
         this.dbs = new DatabaseService();
-
-
-
     }
     public void displayMenu() {
-        System.out.println("Welcome to the Library! Please choose from these two options: " +
-                "\n1. Log in" +
-                "\n2. Exit system");
-
         Scanner scanner = new Scanner(System.in);
-        System.out.print("> ");
-        String choice = scanner.nextLine();
 
-        while(!choice.equals("1") && !choice.equals("2")) {
-            System.out.println("Please choose between 1 and 2.");
+        while (true) {
+            System.out.println("Welcome to the Library! Please choose from these two options: " +
+                    "\n1. Log in" +
+                    "\n2. Sign up" +
+                    "\n3. Exit system");
+
             System.out.print("> ");
-            choice = scanner.nextLine();
-        }
-        if(choice.equals("1")) {
-            User user = logIn();
-            if(user != null) {
-                userService = new UserService(user);
-                userService.userMenu(user);
-            }else {
-                System.out.println("There is no user with those credentials. Press ");
+            String choice = scanner.nextLine();
+
+            if (choice.equals("1")) {
+                User user = logIn();
+                if (user != null) {
+                    userService = new UserService(user, scanner);  // Pass scanner to UserService
+                    boolean isLoggedOut = userService.userMenu(user);
+                    if (isLoggedOut) {
+                        continue;  // Go back to the main menu
+                    }
+                } else {
+                    System.out.println("There is no user with those credentials. Press 2 if you would like to sign up.");
+                }
+            } else if (choice.equals("2")) {
+                userService = new UserService(null, scanner);  // Pass scanner to UserService
+                userService.addUser();
+            } else if (choice.equals("3")) {
+                System.out.println("Thank you for using the library. Goodbye!");
+                break;  // Exit the loop and the application
+            } else {
+                System.out.println("Please choose between 1,2, and 3.");
             }
-        }else {
-            System.out.println("Thank you for using the library. Goodbye!");
-            return;
         }
+
+        scanner.close();  // Close the scanner when completely done with it
     }
     public User logIn() {
         Scanner scanner = new Scanner(System.in);

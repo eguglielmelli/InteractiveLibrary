@@ -12,18 +12,19 @@ public class UserService {
     Scanner scanner;
 
 
-    public UserService(User user) {
+    public UserService(User user,Scanner scanner) {
         this.user = user;
         dbs = new DatabaseService();
-        scanner = new Scanner(System.in);
+        this.scanner = scanner;
     }
-    public void userMenu(User user) {
+    public boolean userMenu(User user) {
         while (true) {
             System.out.println("Welcome " + user.getName() + "! Please choose from these search options: " +
                     "\n 1. Search Books" +
                     "\n 2. See Checked Out Books" +
                     "\n 3. Return Book" +
-                    "\n 4. Log Out");
+                    "\n 4. Log out" +
+                    "\n 5. Delete Account");
 
             System.out.print("> ");
             String choice = scanner.nextLine();
@@ -31,16 +32,18 @@ public class UserService {
                 searchBooks();
                 System.out.println();
             } else if (choice.equals("2")) {
-                System.out.println();
                 seeBooksOnLoan();
                 System.out.println();
             } else if (choice.equals("3")) {
-                System.out.println();
                 returnBook();
                 System.out.println();
-            } else if(choice.equals("4")) {
-                System.out.println("Thank you for using the library. Goodbye!");
-                break;
+            } else if (choice.equals("4")) {
+                // Do not close the scanner here, just break from the loop
+                return true;  // Indicate that the user chose to log out
+            } else if(choice.equals("5")) {
+                    if(deleteAccount()) {
+                        return true;
+                    }
             }else {
                 System.out.println("That is not a valid choice. Please choose again.");
             }
@@ -91,25 +94,52 @@ public class UserService {
         System.out.print("> ");
         String contactNumber = scanner.nextLine();
         LocalDate registrationDate = LocalDate.now();
-        db.addUser(name,email,password,contactNumber,registrationDate);
-
+        dbs.addUserToDB(name,email,password,contactNumber,registrationDate);
     }
-    public void seeBooksOnLoan() {
-        dbs.seeBooksOnLoan(user.getUserID());
+
+    public Set<Integer> seeBooksOnLoan() {
+        return dbs.seeBooksOnLoan(user.getUserID());
     }
 
     public void returnBook() {
-        System.out.println("If you know the book ID that you would like to return, feel free to enter it. If you would like to see your currently checked out books," +
-                "press 'y'.");
+        Set<Integer> bookIDs = seeBooksOnLoan();
+        if(bookIDs == null){
+            return;
+        }
+        System.out.println("Please enter the ID of the book you would like to return:");
         System.out.print("> " );
         String choice = scanner.nextLine();
-        if(choice.equals("y")) {
-            seeBooksOnLoan();
+        while(!validateInteger(choice)) {
+            System.out.print("> ");
+            choice = scanner.nextLine();
         }
-        System.out.println("Input book ID:");
-        System.out.print("> " );
-        int bookID = Integer.parseInt(scanner.nextLine());
-        dbs.returnBook(bookID,LocalDate.now(),user.getUserID());
-        dbs.incrementAvailableCopies(bookID);
+        int bookToBeReturned = Integer.parseInt(choice);
+        if(!bookIDs.contains(bookToBeReturned)) {
+            System.out.println("That ID does not correspond to your current checked out books.");
+            return;
+        }
+        dbs.returnBook(bookToBeReturned,LocalDate.now(),user.getUserID());
+        dbs.incrementAvailableCopies(bookToBeReturned);
+    }
+
+    public boolean validateInteger(String input) {
+        try {
+            Integer.parseInt(input);
+            return true;
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter an integer.");
+            return false;
+        }
+    }
+    public boolean deleteAccount() {
+        System.out.println("Are you sure you would like to delete your account? If yes, enter 'y':");
+        System.out.print("> ");
+        String choice = scanner.nextLine();
+        if(choice.equals("y")) {
+            if(dbs.deleteAccount(user.getUserID())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
