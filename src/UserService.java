@@ -70,20 +70,19 @@ public class UserService {
         Map<String,Book> bookMap = dbs.searchBooks(searchTerm);
 
         if(!bookMap.isEmpty()) {
-            System.out.println("Select an ID of the book you would like to check out, or press q to return to the options menu");
+            System.out.println("Select an ID of the book you would like to check out, or press q to return to the options menu:");
             System.out.print("> ");
             String bookChoice = scanner.nextLine();
             if(bookChoice.equals("q")) {
-                userMenu(user);
                 return;
             }
 
             while(!bookMap.containsKey(bookChoice)) {
-                System.out.println("That is not a valid ID. Please choose from the list.");
+                System.out.println("That is not a valid ID. Please choose from the list, or press q to return to the options menu:");
                 System.out.print("> ");
                 bookChoice = scanner.nextLine();
                 if(bookChoice.equals("q")) {
-                    userMenu(user);
+                    return;
                 }
             }
             checkOutBook(bookChoice);
