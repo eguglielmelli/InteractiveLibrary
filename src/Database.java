@@ -412,7 +412,7 @@ public class Database {
 
             System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", "BookID",
                     "Title", "Author", "ISBN", "Genre", "Checkout Date", "Due Date");
-            System.out.println(String.join("", Collections.nCopies(130, "-")));
+            System.out.println(String.join("", Collections.nCopies(145, "-")));
 
 
             while (resultSet.next()) {
