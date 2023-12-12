@@ -8,13 +8,16 @@ public class Loan {
     private LocalDate dueDate;
     private LocalDate returnDate;
 
-    public Loan(int loanID, int bookID, int userID, LocalDate checkOutDate, int loanDurationDays) {
-        this.loanID = loanID;
+    public Loan(int bookID, int userID, LocalDate checkOutDate, int loanDurationDays) {
         this.bookID = bookID;
         this.userID = userID;
         this.checkOutDate = checkOutDate;
         this.dueDate = checkOutDate.plusDays(loanDurationDays);
         this.returnDate = null;
+    }
+
+    public void setLoanID(int loanID) {
+        this.loanID = loanID;
     }
 
     public int getLoanID() {

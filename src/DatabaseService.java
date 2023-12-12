@@ -30,12 +30,12 @@ public class DatabaseService {
         return true;
     }
 
-    public boolean addLoanToDB(int bookID, int userID, LocalDate checkOutDate, LocalDate dueDate, LocalDate returnDate) {
-        if(!db.addLoan(bookID,userID,checkOutDate,dueDate,null)) {
+    public boolean addLoanToDB(Loan loan) {
+        if(!db.addLoan(loan)) {
             System.out.println("Checkout was unsuccessful. Try again at a later time.");
             return false;
         }
-        db.decrementAvailableCopies(bookID);
+        db.decrementAvailableCopies(loan.getBookID());
         System.out.println("Checkout was successful! Your book can now be seen in your checked out books.");
         return true;
     }

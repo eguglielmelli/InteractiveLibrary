@@ -101,7 +101,8 @@ public class UserService {
      * @param bookID to be checked out
      */
     public void checkOutBook(String bookID) {
-            dbs.addLoanToDB(Integer.parseInt(bookID),user.getUserID(),LocalDate.now(),LocalDate.now().plusDays(30),null);
+            Loan loan = new Loan(Integer.parseInt(bookID), user.getUserID(),LocalDate.now(),30);
+            dbs.addLoanToDB(loan);
             return;
     }
 
@@ -142,24 +143,24 @@ public class UserService {
      * method for user to return the book, they do so by choosing a valid bookID from the set returned by seeBooksOnLoan()
      */
     public void returnBook() {
-        Set<Integer> bookIDs = seeBooksOnLoan();
-        if(bookIDs == null){
+        Set<Integer> loanIDs = seeBooksOnLoan();
+        if(loanIDs == null){
             return;
         }
-        System.out.println("Please enter the ID of the book you would like to return:");
+        System.out.println("Please enter the ID of the loan you would like to return:");
         System.out.print("> " );
         String choice = scanner.nextLine();
         while(!validateInteger(choice)) {
             System.out.print("> ");
             choice = scanner.nextLine();
         }
-        int bookToBeReturned = Integer.parseInt(choice);
-        if(!bookIDs.contains(bookToBeReturned)) {
-            System.out.println("That ID does not correspond to your current checked out books.");
+        int loanToBeReturned = Integer.parseInt(choice);
+        if(!loanIDs.contains(loanToBeReturned)) {
+            System.out.println("That ID does not correspond to your current loans.");
             return;
         }
-        dbs.returnBook(bookToBeReturned,LocalDate.now(),user.getUserID());
-        dbs.incrementAvailableCopies(bookToBeReturned);
+        dbs.returnBook(loanToBeReturned,LocalDate.now(),user.getUserID());
+        dbs.incrementAvailableCopies(loanToBeReturned);
     }
 
     /**

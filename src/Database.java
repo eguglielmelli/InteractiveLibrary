@@ -251,25 +251,30 @@ public class Database {
             e.printStackTrace();
         }
     }
-    public boolean addLoan(int bookID, int userID, LocalDate checkOutDate, LocalDate dueDate, LocalDate returnDate) {
+    public boolean addLoan(Loan loan) {
         String sql = "INSERT INTO library_db.loans_info (BookID, UserID, CheckoutDate, DueDate, ReturnDate) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            pstmt.setInt(1, bookID);
-            pstmt.setInt(2, userID);
-            pstmt.setDate(3, java.sql.Date.valueOf(checkOutDate));
-            pstmt.setDate(4, java.sql.Date.valueOf(dueDate));
+            pstmt.setInt(1, loan.getBookID());
+            pstmt.setInt(2, loan.getUserID());
+            pstmt.setDate(3, java.sql.Date.valueOf(loan.getCheckOutDate()));
+            pstmt.setDate(4, java.sql.Date.valueOf(loan.getDueDate()));
 
-            if (returnDate != null) {
-                pstmt.setDate(5, java.sql.Date.valueOf(returnDate));
+            if (loan.getReturnDate() != null) {
+                pstmt.setDate(5, java.sql.Date.valueOf(loan.getReturnDate()));
             } else {
                 pstmt.setNull(5, java.sql.Types.DATE);
             }
 
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        loan.setLoanID(generatedKeys.getInt(1)); // Set the auto-generated loan ID
+                    }
+                }
                 return true;
             } else {
                 return false;
@@ -396,8 +401,8 @@ public class Database {
     }
     public Set<Integer> showCurrentlyCheckedOutBooks(int userID) throws SQLException {
         Connection connection = getConnection();
-        Set<Integer> bookIDs = new HashSet<>();
-        String query = "SELECT books_info.*, loans_info.CheckoutDate, loans_info.DueDate " +
+        Set<Integer> loanIDs = new HashSet<>();
+        String query = "SELECT books_info.*,loans_info.LoanID, loans_info.CheckoutDate, loans_info.DueDate " +
                 "FROM books_info " +
                 "JOIN loans_info ON books_info.BookID = loans_info.BookID " +
                 "WHERE loans_info.UserID = ? AND loans_info.ReturnDate IS NULL";
@@ -410,33 +415,34 @@ public class Database {
                 return null;
             }
 
-            System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", "BookID",
+            System.out.printf("%-15s %-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", "LoanID","BookID",
                     "Title", "Author", "ISBN", "Genre", "Checkout Date", "Due Date");
-            System.out.println(String.join("", Collections.nCopies(145, "-")));
+            System.out.println(String.join("", Collections.nCopies(160, "-")));
 
 
             while (resultSet.next()) {
                 // Extract book information
                 int bookID = resultSet.getInt("BookID");
-                bookIDs.add(bookID);
                 String title = resultSet.getString("Title");
                 String author = resultSet.getString("Author");
                 String isbn = resultSet.getString("ISBN");
                 String genre = resultSet.getString("Genre");
 
                 // Extract loan information
+                int loanID = resultSet.getInt("LoanID");
+                loanIDs.add(loanID);
                 Date checkoutDate = resultSet.getDate("CheckoutDate");
                 Date dueDate = resultSet.getDate("DueDate");
 
                 // Print each record
-                System.out.printf("%-15s %-30s %-30s %-20s %-20s %-15s %-15s %n", bookID,
-                        title, author, isbn, genre,
+                System.out.printf("%-15d %-15d %-30s %-30s %-20s %-20s %-15s %-15s%n",
+                        loanID, bookID, title, author, isbn, genre,
                         checkoutDate.toString(), dueDate.toString());
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return bookIDs;
+        return loanIDs;
     }
     public void incrementAvailableCopies(int bookID) {
         String sql = "UPDATE library_db.books_info SET AvailableCopies = AvailableCopies + 1 WHERE BookID = ? AND AvailableCopies > 0";
@@ -449,12 +455,12 @@ public class Database {
             e.printStackTrace();
         }
     }
-    public void returnBook(int bookID,LocalDate returnDate,int userID) throws SQLException {
+    public void returnBook(int loanID,LocalDate returnDate,int userID) throws SQLException {
         Connection connection = getConnection();
-        String query = "UPDATE library_db.loans_info SET ReturnDate = ? WHERE bookID = ? AND userID = ?";
+        String query = "UPDATE library_db.loans_info SET ReturnDate = ? WHERE loanID = ? AND userID = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setDate(1, Date.valueOf(returnDate));
-            statement.setInt(2,bookID);
+            statement.setInt(2,loanID);
             statement.setInt(3,userID);
             statement.executeUpdate();
         } catch (SQLException e) {

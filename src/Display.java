@@ -31,7 +31,7 @@ public class Display {
                         continue;  // Go back to the main menu
                     }
                 } else {
-                    System.out.println("There is no user with those credentials. Press 2 if you would like to sign up.");
+                    System.out.println("There is no user with those credentials.");
                 }
             } else if (choice.equals("2")) {
                 userService = new UserService(null, scanner);  // Pass scanner to UserService
@@ -60,5 +60,4 @@ public class Display {
         }
         return null;
     }
-
 }
