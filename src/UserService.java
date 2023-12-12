@@ -147,9 +147,12 @@ public class UserService {
         if(loanIDs == null){
             return;
         }
-        System.out.println("Please enter the ID of the loan you would like to return:");
+        System.out.println("Please enter the ID of the loan you would like to return or press q to return to the main menu:");
         System.out.print("> " );
         String choice = scanner.nextLine();
+
+        if(choice.equals("q")) return;
+
         while(!validateInteger(choice)) {
             System.out.print("> ");
             choice = scanner.nextLine();
