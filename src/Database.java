@@ -79,7 +79,7 @@ public class Database {
         genre = genre.toLowerCase(Locale.ROOT);
         Random random = new Random();
         int totalCopies = 1 + random.nextInt(30);
-        int availableCopies = 1 + random.nextInt(totalCopies);
+        int availableCopies = totalCopies;
 
         String sql = "INSERT INTO library_db.books_info (Title, Author, ISBN, Genre, PublicationYear, TotalCopies, AvailableCopies) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -463,6 +463,47 @@ public class Database {
             statement.setInt(2,loanID);
             statement.setInt(3,userID);
             statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void seeUsersLoanHistory(int userID) throws SQLException{
+        Connection connection = getConnection();
+        String query = "SELECT books_info.*,loans_info.LoanID, loans_info.CheckoutDate, loans_info.DueDate,loans_info.ReturnDate " +
+                "FROM books_info " +
+                "JOIN loans_info ON books_info.BookID = loans_info.BookID " +
+                "WHERE loans_info.UserID = ? AND loans_info.ReturnDate IS NOT NULL";
+
+        System.out.println(String.join("", Collections.nCopies(180, "-")));
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userID);
+            ResultSet resultSet = statement.executeQuery();
+
+            System.out.printf("%-15s %-15s %-30s %-30s %-20s %-20s %-15s %-15s %-15s %n", "LoanID","BookID",
+                    "Title", "Author", "ISBN", "Genre", "Checkout Date", "Due Date","Return Date");
+            System.out.println(String.join("", Collections.nCopies(180, "-")));
+
+
+            while (resultSet.next()) {
+                // Extract book information
+                int bookID = resultSet.getInt("BookID");
+                String title = resultSet.getString("Title");
+                String author = resultSet.getString("Author");
+                String isbn = resultSet.getString("ISBN");
+                String genre = resultSet.getString("Genre");
+
+                // Extract loan information
+                int loanID = resultSet.getInt("LoanID");
+                Date checkoutDate = resultSet.getDate("CheckoutDate");
+                Date dueDate = resultSet.getDate("DueDate");
+                Date returnDate = resultSet.getDate("ReturnDate");
+
+                // Print each record
+                System.out.printf("%-15d %-15d %-30s %-30s %-20s %-20s %-15s %-15s %-15s %n",
+                        loanID, bookID, title, author, isbn, genre,
+                        checkoutDate.toString(), dueDate.toString(),returnDate.toString());
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

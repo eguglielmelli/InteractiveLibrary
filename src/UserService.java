@@ -31,8 +31,9 @@ public class UserService {
                     "\n 1. Search Books" +
                     "\n 2. See Checked Out Books" +
                     "\n 3. Return Book" +
-                    "\n 4. Log out" +
-                    "\n 5. Delete Account");
+                    "\n 4. See Past Loans" +
+                    "\n 5. Log Out" +
+                    "\n 6. Delete Account");
 
             System.out.print("> ");
             String choice = scanner.nextLine();
@@ -47,12 +48,14 @@ public class UserService {
                 returnBook();
                 System.out.println();
             } else if (choice.equals("4")) {
-                return true;
+               seeUserLoanHistory();
             } else if(choice.equals("5")) {
-                    if(deleteAccount()) {
-                        return true;
-                    }
-            }else {
+                return true;
+            } else if (choice.equals("6")) {
+                if(deleteAccount()) {
+                    return true;
+                }
+            } else {
                 System.out.println("That is not a valid choice. Please choose again.");
             }
         }
@@ -126,7 +129,10 @@ public class UserService {
         System.out.println("Please enter your contact number with format xxx-xxx-xxxx");
         System.out.print("> ");
         String contactNumber = scanner.nextLine().strip();
-
+        while(!contactNumber.matches("[0-9]{3}-[0-9]{3}-[0-9]{4}")) {
+            System.out.println("The number entered does not match the format, try again.");
+            contactNumber = scanner.nextLine().strip();
+        }
         LocalDate registrationDate = LocalDate.now();
         dbs.addUserToDB(name,email,password,contactNumber,registrationDate);
     }
@@ -197,4 +203,13 @@ public class UserService {
         }
         return false;
     }
+
+    /**
+     * Allows the user to see the loans they have made in the past
+     */
+    public void seeUserLoanHistory() {
+        dbs.seeUserLoanHistory(user.getUserID());
+        return;
+    }
+
 }
