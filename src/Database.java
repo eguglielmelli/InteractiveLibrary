@@ -474,8 +474,6 @@ public class Database {
                 "FROM books_info " +
                 "JOIN loans_info ON books_info.BookID = loans_info.BookID " +
                 "WHERE loans_info.UserID = ? AND loans_info.ReturnDate IS NOT NULL";
-
-        System.out.println(String.join("", Collections.nCopies(180, "-")));
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, userID);
             ResultSet resultSet = statement.executeQuery();
