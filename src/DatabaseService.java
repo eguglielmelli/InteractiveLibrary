@@ -105,6 +105,13 @@ public class DatabaseService {
     public void incrementAvailableCopies(int bookID) {
         db.incrementAvailableCopies(bookID);
     }
+
+    /**
+     * Returns the book into the database
+     * @param bookID of book to be returned
+     * @param returnDate date that user returned the book
+     * @param userID ID of user
+     */
     public void returnBook(int bookID,LocalDate returnDate,int userID) {
         try {
             db.returnBook(bookID,returnDate,userID);
