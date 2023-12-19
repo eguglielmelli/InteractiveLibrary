@@ -9,6 +9,9 @@ public class Database {
     private String user = "root";
     private String password = "Eg100997";
 
+    /**
+     * Method sets up the database and tables if they are not already created
+     */
     public void setupDatabase() {
 
         String databaseName = "library_db";
@@ -69,10 +72,24 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    /**
+     * establishes connection to database
+     * @return connection
+     * @throws SQLException if no connection is made
+     */
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url,user,password);
     }
 
+    /**
+     * Adds a book to the database
+     * @param title of the book
+     * @param author of the book
+     * @param ISBN of the book
+     * @param year of the book
+     * @param genre of the book
+     */
     public void addBook(String title,String author,String ISBN,int year,String genre) {
         title = title.toLowerCase(Locale.ROOT);
         author = author.toLowerCase(Locale.ROOT);
@@ -132,6 +149,14 @@ public class Database {
         }
 
     }
+
+    /**
+     * Gets the user from the database after they have provided their credentials
+     * @param email of user
+     * @param password of user
+     * @return user object
+     * @throws SQLException if connection cannot be established
+     */
     public User getUser(String email,String password) throws SQLException {
         Connection connect = getConnection();
         email = email.trim();
@@ -155,6 +180,16 @@ public class Database {
         }
         return null;
     }
+
+    /**
+     * Adds a user to the database after they have provided their information
+     * @param name of user
+     * @param email of user
+     * @param password of user
+     * @param contactNumber of user
+     * @param registrationDate of user
+     * @return true if used was added, else return false
+     */
     public boolean addUser(String name, String email, String password, String contactNumber, LocalDate registrationDate) {
         String sql = "INSERT INTO library_db.customers_info (Name, Email, Password, ContactNumber, RegistrationDate) VALUES (?, ?, ?, ?, ?)";
 
@@ -179,8 +214,14 @@ public class Database {
         }
         return false;
     }
+
+    /**
+     * Deletes a user from the database
+     * @param userID ID of user
+     * @return true if the user was deleted, else false
+     * @throws SQLException if connection couldn't be established
+     */
     public boolean deleteUser(int userID) throws SQLException {
-        // Assume showCurrentlyCheckedOutBooks returns a Set of book IDs
         int booksCheckedOut = findNumberOfBooksCheckedOut(userID);
         if (booksCheckedOut != 0) {
             System.out.println("You cannot delete your account while you have books checked out.");
@@ -192,7 +233,7 @@ public class Database {
             // Start transaction
             conn.setAutoCommit(false);
 
-            // Delete related records from loans_info
+
             String deleteLoansQuery = "DELETE FROM library_db.loans_info WHERE userID = ?";
             try (PreparedStatement pstmtLoans = conn.prepareStatement(deleteLoansQuery)) {
                 pstmtLoans.setInt(1, userID);
@@ -251,6 +292,12 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Adds a loan to the database after a user has checked out a book
+     * @param loan a new loan created when user checked out a book
+     * @return true if the loan was added, else false
+     */
     public boolean addLoan(Loan loan) {
         String sql = "INSERT INTO library_db.loans_info (BookID, UserID, CheckoutDate, DueDate, ReturnDate) VALUES (?, ?, ?, ?, ?)";
 
@@ -311,6 +358,11 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Decrements the available copies of a given book after a user has checked out a book
+     * @param bookID of the book the user has checked out
+     */
     public void decrementAvailableCopies(int bookID) {
         String sql = "UPDATE library_db.books_info SET AvailableCopies = AvailableCopies - 1 WHERE BookID = ? AND AvailableCopies > 0";
 
@@ -319,7 +371,7 @@ public class Database {
 
             pstmt.setInt(1, bookID);
 
-            int affectedRows = pstmt.executeUpdate();
+            pstmt.executeUpdate();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -342,6 +394,13 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Allows the user to search for books using fuzzy search
+     * @param searchTerm that the user inputs
+     * @return a map of book IDs and book objects that the user can choose to checkout
+     * @throws SQLException if connection can't be established
+     */
     public Map<String,Book> searchBooks(String searchTerm) throws SQLException {
         Connection connect = getConnection();
 
@@ -383,6 +442,13 @@ public class Database {
         }
         return result;
     }
+
+    /**
+     * Finds number of books user has checked out
+     * @param userID ID of user
+     * @return number of books checked out
+     * @throws SQLException if connection can't be established
+     */
     public int findNumberOfBooksCheckedOut(int userID) throws SQLException {
         Connection connection = getConnection();
         String query = "SELECT COUNT(*) FROM library_db.loans_info WHERE UserID = ? AND ReturnDate IS NULL"; // Assuming ReturnDate is NULL for checked out books
@@ -399,6 +465,13 @@ public class Database {
         }
         return 0; // Return 0 if no rows are found or an exception occurs
     }
+
+    /**
+     * Shows the books that are currently checked out by user
+     * @param userID ID of user
+     * @return a set of loan IDs that a user can check select to return a book
+     * @throws SQLException if connection can't be established
+     */
     public Set<Integer> showCurrentlyCheckedOutBooks(int userID) throws SQLException {
         Connection connection = getConnection();
         Set<Integer> loanIDs = new HashSet<>();
@@ -444,6 +517,11 @@ public class Database {
         }
         return loanIDs;
     }
+
+    /**
+     * Increments available copies of a book when a user returns it
+     * @param bookID ID of book that is returned
+     */
     public void incrementAvailableCopies(int bookID) {
         String sql = "UPDATE library_db.books_info SET AvailableCopies = AvailableCopies + 1 WHERE BookID = ? AND AvailableCopies > 0";
 
@@ -455,6 +533,14 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Returns a book to the database by setting the loan return date to the current date
+     * @param loanID ID of loan
+     * @param returnDate date that user returns book
+     * @param userID ID of user
+     * @throws SQLException if connection cannot be established
+     */
     public void returnBook(int loanID,LocalDate returnDate,int userID) throws SQLException {
         Connection connection = getConnection();
         String query = "UPDATE library_db.loans_info SET ReturnDate = ? WHERE loanID = ? AND userID = ?";
@@ -468,6 +554,11 @@ public class Database {
         }
     }
 
+    /**
+     * See users history and the books they have checked out in the past
+     * @param userID ID of user
+     * @throws SQLException if connection can't be established
+     */
     public void seeUsersLoanHistory(int userID) throws SQLException{
         Connection connection = getConnection();
         String query = "SELECT books_info.*,loans_info.LoanID, loans_info.CheckoutDate, loans_info.DueDate,loans_info.ReturnDate " +
