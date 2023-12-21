@@ -5,9 +5,19 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class Database {
-    private String url = "jdbc:mysql://localhost:3306/library_db?allowPublicKeyRetrieval=true&useSSL=false";
-    private String user = "root";
-    private String password = "Eg100997";
+    private String url;
+    private String user;
+    private String password;
+
+    public Database() {
+        url = System.getenv("DB_URL");
+        user = System.getenv("DB_USER");
+        password = System.getenv("DB_PASSWORD");
+
+        if(url == null || user == null || password == null) {
+            throw new IllegalStateException("Database credentials are not set in environment variables.");
+        }
+    }
 
     /**
      * Method sets up the database and tables if they are not already created
@@ -122,34 +132,6 @@ public class Database {
             e.printStackTrace();
         }
     }
-    public void printBooksTables() {
-        String tableName = "books_info"; // Your table name
-
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             Statement stmt = conn.createStatement()) {
-
-            String sql = "SELECT * FROM " + tableName;
-            ResultSet rs = stmt.executeQuery(sql);
-
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
-
-            while (rs.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rs.getString(i) + "\t");
-                }
-                System.out.println();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     /**
      * Gets the user from the database after they have provided their credentials
      * @param email of user
@@ -198,7 +180,7 @@ public class Database {
 
             pstmt.setString(1, name);
             pstmt.setString(2, email);
-            pstmt.setString(3, password); // Ensure this password is hashed
+            pstmt.setString(3, password);
             pstmt.setString(4, contactNumber);
             pstmt.setDate(5, java.sql.Date.valueOf(registrationDate));
 
@@ -230,7 +212,7 @@ public class Database {
 
         Connection conn = getConnection();
         try {
-            // Start transaction
+
             conn.setAutoCommit(false);
 
 
@@ -240,7 +222,7 @@ public class Database {
                 pstmtLoans.executeUpdate();
             }
 
-            // Delete user from customers_info
+
             String deleteUserQuery = "DELETE FROM library_db.customers_info WHERE userID = ?";
             try (PreparedStatement pstmtUser = conn.prepareStatement(deleteUserQuery)) {
                 pstmtUser.setInt(1, userID);
@@ -253,44 +235,18 @@ public class Database {
                 }
             }
 
-            // Commit transaction
+
             conn.commit();
         } catch (SQLException e) {
-            // Rollback transaction in case of error
+
             conn.rollback();
             System.out.println("Error occurred during deletion. Try again.");
             e.printStackTrace();
         } finally {
-            // Reset default behavior
+
             conn.setAutoCommit(true);
         }
         return false;
-    }
-        public void printCustomerTable() {
-        String tableName = "customers_info"; // Your table name
-
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             Statement stmt = conn.createStatement()) {
-
-            String sql = "SELECT * FROM " + tableName;
-            ResultSet rs = stmt.executeQuery(sql);
-
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
-
-            while (rs.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rs.getString(i) + "\t");
-                }
-                System.out.println();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -332,32 +288,6 @@ public class Database {
         }
         return false;
     }
-    public void printLoansTable() {
-        String tableName = "loans_info"; // Your table name
-
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             Statement stmt = conn.createStatement()) {
-
-            String sql = "SELECT * FROM " + tableName;
-            ResultSet rs = stmt.executeQuery(sql);
-
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
-
-            while (rs.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rs.getString(i) + "\t\t");
-                }
-                System.out.println();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Decrements the available copies of a given book after a user has checked out a book
@@ -372,23 +302,6 @@ public class Database {
             pstmt.setInt(1, bookID);
 
             pstmt.executeUpdate();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    public void clearLoanTable() {
-        String sql = "DELETE FROM " + "library_db" + ".loans_info";
-
-        try (Connection conn = getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                System.out.println("Loan table cleared successfully. Rows affected: " + affectedRows);
-            } else {
-                System.out.println("Loan table is already empty or operation did not execute.");
-            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -456,14 +369,14 @@ public class Database {
             statement.setInt(1, userID);
             ResultSet resultSet = statement.executeQuery();
 
-            // Check if the result set has a row and return the count
+
             if (resultSet.next()) {
-                return resultSet.getInt(1); // The count is in the first column
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0; // Return 0 if no rows are found or an exception occurs
+        return 0;
     }
 
     /**
@@ -494,20 +407,17 @@ public class Database {
 
 
             while (resultSet.next()) {
-                // Extract book information
                 int bookID = resultSet.getInt("BookID");
                 String title = resultSet.getString("Title");
                 String author = resultSet.getString("Author");
                 String isbn = resultSet.getString("ISBN");
                 String genre = resultSet.getString("Genre");
 
-                // Extract loan information
                 int loanID = resultSet.getInt("LoanID");
                 loanIDs.add(loanID);
                 Date checkoutDate = resultSet.getDate("CheckoutDate");
                 Date dueDate = resultSet.getDate("DueDate");
 
-                // Print each record
                 System.out.printf("%-15d %-15d %-30s %-30s %-20s %-20s %-15s %-15s%n",
                         loanID, bookID, title, author, isbn, genre,
                         checkoutDate.toString(), dueDate.toString());
@@ -575,20 +485,20 @@ public class Database {
 
 
             while (resultSet.next()) {
-                // Extract book information
+
                 int bookID = resultSet.getInt("BookID");
                 String title = resultSet.getString("Title");
                 String author = resultSet.getString("Author");
                 String isbn = resultSet.getString("ISBN");
                 String genre = resultSet.getString("Genre");
 
-                // Extract loan information
+
                 int loanID = resultSet.getInt("LoanID");
                 Date checkoutDate = resultSet.getDate("CheckoutDate");
                 Date dueDate = resultSet.getDate("DueDate");
                 Date returnDate = resultSet.getDate("ReturnDate");
 
-                // Print each record
+
                 System.out.printf("%-15d %-15d %-30s %-30s %-20s %-20s %-15s %-15s %-15s %n",
                         loanID, bookID, title, author, isbn, genre,
                         checkoutDate.toString(), dueDate.toString(),returnDate.toString());

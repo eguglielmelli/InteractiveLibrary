@@ -1,5 +1,8 @@
 import java.time.LocalDate;
 
+/**
+ * Class represents a loan that will be created when a user checks out a book
+ */
 public class Loan {
     private int loanID;
     private int bookID;

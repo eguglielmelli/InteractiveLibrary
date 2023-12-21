@@ -1,3 +1,6 @@
+/**
+ * Class represents a book object where attributes map to the same attributes in the database
+ */
 public class Book {
     private int bookID;
     private String title;

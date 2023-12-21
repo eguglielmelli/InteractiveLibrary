@@ -10,6 +10,10 @@ public class Display {
         this.userService = null;
         this.dbs = new DatabaseService();
     }
+
+    /**
+     * Represents the main menu where user will enter in their credentials if they have an account, or be able to sign up as a new user
+     */
     public void displayMenu() {
         Scanner scanner = new Scanner(System.in);
 
@@ -44,8 +48,13 @@ public class Display {
             }
         }
 
-        scanner.close();  // Close the scanner when completely done with it
+        scanner.close();
     }
+
+    /**
+     * Allows the user to log in if they have an account
+     * @return null if no account found, else return user object
+     */
     public User logIn() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please enter your email:");
